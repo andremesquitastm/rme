@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remover Espaços</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Barra topo */
+#colab-bar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: #ffbf00;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  z-index: 1000;
+  font-weight: bold;
+}
+
+.btn-colab {
+  background: #0070ba;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+/* Container */
+.container {
+  background: white;
+  padding: 100px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+  width: 90%;
+  max-width: 600px;
+}
+
+/* Input */
+input {
+  width: 94%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Botões */
+.botoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.botoes button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-processar { background: #007bff; }
+.btn-copiar { background: #28a745; }
+.btn-limpar { background: #6c757d; }
+
+/* Resultado */
+#resultado {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #28a745;
+  word-break: break-all;
+}
+
+/* Toast */
+#toast {
+  position: fixed;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #333;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  opacity: 0;
+  transition: 0.3s;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Modal */
+#modal {
+  display: none;
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  cursor: pointer;
+  font-size: 20px;
+}
+footer {
+  position: fixed;
+  bottom: 5px;
+  width: 100%;
+  text-align: center;
+}
+
+.powered {
+  font-size: 11px;
+  color: rgba(255,255,255,0.7);
+  font-family: 'Segoe UI', sans-serif;
+}
+</style>
+</head>
+</head>
+
+<body>
+
+<div id="colab-bar">
+  <span>Colabore para manter o site no ar:</span>
+  <a href="#" id="btnpaypal" class="btn-colab">PayPal</a>
+  <a href="#" id="btnPix" class="btn-colab">Pix</a>
+  <a href="#" id="btnBtc" class="btn-colab">BTC</a>
+</div>
+
+<div class="container">
+  <h2>Remover espaços e hífen</h2>
+
+  <input id="entrada" placeholder="Digite aqui...">
+
+  <div class="botoes">
+    <button class="btn-processar" onclick="_r()">Processar</button>
+    <button class="btn-copiar" onclick="_c()">Copiar</button>
+    <button class="btn-limpar" onclick="_l()">Limpar</button>
+  </div>
+
+  <div id="resultado"></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="modal">
+  <div class="modal-box">
+    <span class="close" id="fechar">×</span>
+    <h3>Escaneie o QR Code</h3>
+    <img id="qr" style="width:250px;">
+  </div>
+</div>
+
+<script>
+const _e = document.getElementById("entrada");
+const _rEl = document.getElementById("resultado");
+const _t = document.getElementById("toast");
+
+function _r() {
+  let v = _e.value.trim();
+  if (!v) return _rEl.innerText = "Digite algo!";
+  _rEl.innerText = v.replace(/[\s-]+/g,'');
+}
+
+function _c() {
+  if (!_rEl.innerText) return _toast("Nada para copiar");
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(_rEl.innerText)
+      .then(()=>_toast("Copiado com sucesso!"))
+      .catch(()=>_fb());
+  } else {
+    _fb();
+  }
+}
+
+function _fb() {
+  let t = document.createElement("textarea");
+  t.value = _rEl.innerText;
+  document.body.appendChild(t);
+  t.select();
+  document.execCommand("copy");
+  document.body.removeChild(t);
+  _toast("Copiado!");
+}
+
+function _l() {
+  _e.value = "";
+  _rEl.innerText = "";
+  _e.focus();
+}
+
+function _toast(m) {
+  _t.innerText = m;
+  _t.classList.add("show");
+  setTimeout(()=>_t.classList.remove("show"),2000);
+}
+
+/* Enter */
+_e.addEventListener("keypress", e => {
+  if (e.key === "Enter") _r();
+});
+
+/* Modal */
+const _m = document.getElementById("modal");
+const _qr = document.getElementById("qr");
+
+document.getElementById("btnpaypal").onclick = e => {
+  e.preventDefault();
+  _qr.src = "./imagens/paypal.jpeg";
+  _m.style.display = "flex";
+};
+
+document.getElementById("btnPix").onclick = e => {
+  e.preventDefault();
+  _qr.src = "./imagens/qrcode.jpeg";
+  _m.style.display = "flex";
+};
+
+document.getElementById("btnBtc").onclick = e => {
+  e.preventDefault();
+  _qr.src = "./imagens/btc.jpeg";
+  _m.style.display = "flex";
+};
+
+document.getElementById("fechar").onclick = () => _m.style.display = "none";
+
+window.onclick = e => {
+  if (e.target === _m) _m.style.display = "none";
+};
+
+/* Proteções básicas */
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+document.onkeydown = function(e) {
+  if (e.key === "F12") return false;
+  if (e.ctrlKey && e.shiftKey && e.key === "I") return false;
+};
+</script>
+
+<footer>
+ <span class="powered">Powered by André Mesquita - Email: andremesquitastm@gmail.com</span>
+</footer>
+
+</body>
+</html>
